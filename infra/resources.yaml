@@ -1,0 +1,121 @@
+# Resources definitions
+
+Resources:
+
+  # Media Converter Queue
+  VODQueue:
+    Type: AWS::MediaConvert::Queue
+    Properties:
+      Name: ${self:custom.mediaQueue}
+
+  # DynamoDB table
+  VideosDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.tableName}
+      AttributeDefinitions:
+        - AttributeName: uuid
+          AttributeType: S
+      KeySchema:
+        - AttributeName: uuid
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  # S3 Bucket for upload and serve videos
+  UploadMediaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:custom.bucketName} 
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: false
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+
+  # Policy for public writing (when signed) to upload dir
+  UploadFolderPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Sid: PublicWriteForPutBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:PutObject'
+            Resource:
+              - Fn::Join:
+                - '/'
+                - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
+                  - ${self:custom.uploadFolder}
+                  - "*"
+      Bucket:
+        Ref: UploadMediaBucket 
+
+  # Policy for public read (when signed) to play videos
+  MediaFolderPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:GetObject'
+            Resource:
+              - Fn::Join:
+                - '/'
+                - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
+                  - ${self:custom.mediaFolder}
+                  - "*"
+      Bucket:
+        Ref: UploadMediaBucket 
+
+  ## Role for Media Converter
+  #MediaConverterRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    RoleName: media-converter-roles-vod-${self:custom.stage}
+  #    AssumeRolePolicyDocument:
+  #
+  #    Policies:
+  #      - PolicyName: "MediaConverterRolePermissions"
+  #        PolicyDocument:
+  #          Statement:
+  #            # Allow to read the upload directory
+  #            - Sid: "MediaCoverterRoleS3Read"
+  #              Effect: Allow
+  #              Action:
+  #                - s3:GetObject
+  #              Resource:
+  #                - Fn::Join:
+  #                  - '/'
+  #                  - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
+  #                    - ${self:custom.uploadFolder}
+  #                    - "*"
+  #            # Allow to write in the final media directory
+  #            - Sid: "MediaCoverterRoleS3Write"
+  #              Effect: Allow
+  #              Action:
+  #                - s3:PutObject
+  #              Resource:
+  #                - Fn::Join:
+  #                  - '/'
+  #                  - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
+  #                    - ${self:custom.mediaFolder}
+  #                    - "*"

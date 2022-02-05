@@ -1,0 +1,156 @@
+service: media-converter 
+variablesResolutionMode: 20210326
+
+package:
+  patterns:
+#    - '!node_modules/@aws-sdk/**'
+    - '!node_modules/serverless*'
+    - '!tools/**'
+    - '!infra/**'
+    - '!docs/**'
+    - '!README.md'
+    - '!package-lock.json'
+
+custom: ${file(./infra/custom.yaml)}
+resources: ${file(./infra/resources.yaml)}
+
+provider:
+  name: aws
+  iam: ${file(./infra/iam.yaml)}
+  apiGateway:
+    minimumCompressionSize: 512 
+    resourcePolicy:
+      - Effect: Allow
+        Principal: "*"
+        Action: execute-api:Invoke
+        Resource:
+          - execute-api:/*
+  runtime: nodejs14.x
+  memorySize: 256
+  timeout: 10
+  lambdaHashingVersion: 20201221
+  endpointType: REGIONAL 
+  environment:
+    # Config for debug module
+    DEBUG: "*" 
+    DEBUG_HIDE_DATE: 1 
+
+    # Utils envs
+    NODE_ENV: ${self:custom.stage}
+
+    # S3 config
+    S3_BUCKET: ${self:custom.bucketName} 
+    S3_UPLOAD_DIR: ${self:custom.uploadFolder}
+    S3_MEDIA_DIR: ${self:custom.mediaFolder}
+
+    # MediaConverter service config
+    MEDIA_CONVERTER_QUEUE: ${self:custom.mediaQueue} 
+    MEDIA_CONVERTER_ARN:
+      Fn::GetAtt: [ VODQueue, Arn ]
+
+    # DynamoDB config
+    DB_TABLE: ${self:custom.tableName} 
+
+## Use of custom vpc for security and isolations  -> RECOMMENDED!!
+#  vpc:
+#    securityGroupIds:
+#      - 
+#    subnetIds:
+#      - 
+#      - 
+
+plugins:
+  - serverless-prune-plugin   # Plugin for prune old functions versions
+
+## @TODO
+#layers:
+#  nodeModules:
+#    name: media-converter-node-modules-layer-${self:custom.stage}
+#    path: node_modules 
+#    description: Node modules directory for all functions
+#    package:
+#      patterns:
+###        - 'node_modules/**'
+#        - '!serverless*'
+
+# Functions definition
+functions:
+
+  ####################
+  ##  API Functions ##
+  ####################
+
+  # List upload videos
+  ListVideos:
+    handler: src/api.list
+    events:
+      - http:
+          path: videos
+          method: get
+
+  # Get video url for player
+  GetVideoUri:
+    handler: src/apì.get
+    events:
+      - http:
+          path: videos/{uuid}
+          method: get
+          request:
+            parameters:
+              paths:
+                uuid: true
+
+  # Create new video and get upload url
+  CreateVideo:
+    handler: src/api.create 
+    events:
+      - http:
+          path: videos 
+          method: post
+
+  ########################
+  ## Internal functions ##
+  ########################
+
+  # Handle S3 createObject event, and send file to process
+  SetUpload:
+    handler: src/s3.upload 
+    tags:
+      fname: set-s3-upload 
+    events:
+      - s3:
+          bucket:
+            Ref: UploadMediaBucket
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: ${self:custom.uploadFolder} 
+          existing: true
+
+  # Handle MediaConverter Job event and mark video as finished/failed
+  SetEncoded:
+    handler: src/s3.encoded
+    events:
+      - cloudwatchEvent:
+          event:
+            source:
+              - 'aws.mediaconvert'
+            detail-type:
+              - 'MediaConvert Job State Change'
+            detail:
+              status:
+                - COMPLETE
+                - ERROR
+              queue:
+                - Fn::GetAtt: [ VODQueue, Arn ] 
+
+  #################
+  ## Schedulers  ##
+  #################
+  
+  # Clean old videos registers from DB and delete files
+  #ScheduledTask1:
+    #handler: src/index.clean
+    #events:
+      #- schedule:
+          #rate: rate(24 hours)
+          #enabled: true

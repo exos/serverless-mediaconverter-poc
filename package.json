@@ -1,0 +1,27 @@
+{
+  "name": "aftermedia",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "exos",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless": "^3.1.1",
+    "serverless-prune-plugin": "^2.0.1",
+    "serverless-vpc-discovery": "^3.1.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.49.0",
+    "@aws-sdk/client-mediaconvert": "^3.49.0",
+    "@aws-sdk/client-s3": "^3.49.0",
+    "@aws-sdk/lib-dynamodb": "^3.49.0",
+    "@aws-sdk/s3-request-presigner": "^3.49.0",
+    "debug": "^4.3.3",
+    "uuid": "^8.3.2"
+  }
+}

@@ -1,0 +1,19 @@
+stage: ${opt:stage, 'dev'}
+region: ${opt:region, 'us-east-1'}
+accountId: !Ref AWS::AccountId
+
+# Own
+uploadFolder: uploads                                     # Folder for uplaods
+mediaFolder: media                                        # Folder for final videos files
+bucketName: media-converter-uploads-${self:custom.stage}  # S3 bucket name
+mediaQueue: media-converter-queue-${self:custom.stage}    # MediaConverter queue name
+tableName: MediaConverter-Videos-${self:custom.stage}     # DynamoDB table name
+
+# Define role arn for Video Converter service
+# @TODO Generate as resource
+videConverterRole: 'arn:aws:iam::{ Ref AWS::AccountId }:role/service-role/MediaConvert_Default_Role'
+
+## Prune plugin configuration
+prune:
+  automatic: true
+  number: 3
