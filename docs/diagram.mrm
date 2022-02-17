@@ -1,0 +1,40 @@
+sequenceDiagram
+
+  actor C as Consumer
+  participant A as API GW
+  participant S3
+  participant L as Lambda layer
+  participant M as MediaConverter
+  participant DB as DynamoDB
+
+  C->>A: Create new video
+  activate A
+  A->>L: fly
+  activate L
+  L->>DB: Generate UUID and save in DB
+  Note over L: Create signed to put video file
+  L->>A: send signed url to put video
+  deactivate L
+  A->>C: fly
+  deactivate A
+  
+
+  C->>S3: Upload original video to S3
+  activate S3
+  Note over S3: Uploading....
+  S3->>C: Success
+  S3-->>L: Emit objectCreat
+  activate L
+  deactivate S3
+  L->>DB: Change estatus new -> upload
+  L->>M: Start Media Converter job
+  deactivate L 
+  activate M 
+  note over M: Proccess video
+  M-->>L: Emit job finished
+  deactivate M 
+  activate L
+  L->>DB: Change status upload -> processed
+  deactivate L
+
+  

@@ -90,6 +90,68 @@ $ npx sls deploy
 
 And the magic appears.
 
+## Try it 
+
+When you finish to deploy this stack, you must to get something like:
+
+```
+Deploying mytest-media-converter to stage dev (us-east-1)
+✔ Pruning of functions complete
+
+✔ Service deployed to stack mytest-media-converter-dev (141s)
+
+endpoints:
+  GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/videos
+  GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/videos/{uuid}
+  POST - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/videos
+functions:
+  ListVideos: mytest-media-converter-dev-ListVideos (4 MB)
+  GetVideoUri: mytest-media-converter-dev-GetVideoUri (4 MB)
+  CreateVideo: mytest-media-converter-dev-CreateVideo (4 MB)
+  SetUpload: mytest-media-converter-dev-SetUpload (4 MB)
+  SetEncoded: mytest-media-converter-dev-SetEncoded (4 MB)
+```
+
+Those endpoints urls are public, you can to try it with curl or software like
+postman:
+
+```
+$ curl https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/videos
+```
+
+This endpoint return a list of json object, with video uuid and status.
+
+### Status
+
+The status of contents refer to:
+
+|Value|Name|Description|
+|:--:|:---:|:--|
+|0|NEW|The video has created in the DB, but the convertion job don't start yet|
+|1|PROCESSING|Media Converter job has started, the video is transcoding|
+|2|PROCESSED|Media Converter job is finished and is success|
+|3|ERROR|Media Converter job fails converting video|
+
+### Uploading test video
+
+When you create a video record this return an upload URL directly with Amazon
+S3, you need to upload the video sending a `PUT` to this URL, for simplify the
+process of upload, there are a script to test it in `tools/index.js`, you can
+run it with:
+
+```
+$ DEBUG="vmc*" node tools/index.js upload https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/videos /path/to/original.video
+```
+
+> `DEBUG="vmc*"` shows debug info (steps and responses)
+
+The only method now is `upload`, you can see the usage with:
+
+```
+$ node tools/index.js --help
+$ node tools/index.js upload --help
+```
+
 ## License 📄
 
 @TODO
