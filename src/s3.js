@@ -110,8 +110,13 @@ async function complete(details) {
  * @return {Promise<void>}
  */
 async function error(details) {
-    debug('Fail video transcoding');
-    debug(JSON.stringify(details, null, 2));
+    debug('Fail video transcoding', JSON.stringify(details));
+
+    const {uuid} = details.userMetadata;
+
+    debug(`Set video ${uuid} as error`);
+    await videos.setStatus(uuid, videos.STATUS_ERROR);
+    debug(`Saved video status`);
 }
 
 /**
