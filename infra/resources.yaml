@@ -86,36 +86,43 @@ Resources:
       Bucket:
         Ref: UploadMediaBucket 
 
-  ## Role for Media Converter
-  #MediaConverterRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    RoleName: media-converter-roles-vod-${self:custom.stage}
-  #    AssumeRolePolicyDocument:
-  #
-  #    Policies:
-  #      - PolicyName: "MediaConverterRolePermissions"
-  #        PolicyDocument:
-  #          Statement:
-  #            # Allow to read the upload directory
-  #            - Sid: "MediaCoverterRoleS3Read"
-  #              Effect: Allow
-  #              Action:
-  #                - s3:GetObject
-  #              Resource:
-  #                - Fn::Join:
-  #                  - '/'
-  #                  - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
-  #                    - ${self:custom.uploadFolder}
-  #                    - "*"
-  #            # Allow to write in the final media directory
-  #            - Sid: "MediaCoverterRoleS3Write"
-  #              Effect: Allow
-  #              Action:
-  #                - s3:PutObject
-  #              Resource:
-  #                - Fn::Join:
-  #                  - '/'
-  #                  - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
-  #                    - ${self:custom.mediaFolder}
-  #                    - "*"
+  # Role for Media Converter
+  MediaConverterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ${self:custom.mediaRole} 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - mediaconvert.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: "MediaConverterRolePermissions"
+          PolicyDocument:
+            Statement:
+              # Allow to read the upload directory
+              - Sid: "MediaCoverterRoleS3Read"
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - Fn::Join:
+                    - '/'
+                    - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
+                      - ${self:custom.uploadFolder}
+                      - "*"
+              # Allow to write in the final media directory
+              - Sid: "MediaCoverterRoleS3Write"
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - Fn::Join:
+                    - '/'
+                    - - Fn::GetAtt: [ UploadMediaBucket, Arn ] 
+                      - ${self:custom.mediaFolder}
+                      - "*"

@@ -19,7 +19,8 @@ upload videos, using H264 and resicing to 720px.
 The list of resources if available in the file `infra/resources.yaml` and there
 are:
 
-* MediaConverter Queue
+* Media Converter Queue
+* Media Converter Role
 * DynamoDB Table
 * S3 Bucket
 * Lambda functions
@@ -37,9 +38,8 @@ are:
 Clone git repo:
 
 ```
-$ git clone git@github.com:exoshtw/node-admob-ssv.git
+$ git clone @TODO
 ```
-
 
 ### Deploy 📦
 
@@ -68,16 +68,17 @@ $ npm install
 
 Open the `infra/custom.yaml` file to change names and other configurations.
 
-#### Create Role for Video Converter
+#### Set project prefix
 
-> This step is the only thing you need to do in the AWS console
+Amazon names are uniqe, by default the names are conformed by a prefix, a name
+for the resource and the stage (by default is dev), for example:
 
-You can to follow [this
-guide](https://docs.aws.amazon.com/mediaconvert/latest/ug/creating-the-iam-role-in-iam.html)
-from Amazon.
+```yaml
+bucketName: ${self:custom.prefix}-uploads-${self:custom.stage}
+```
 
-Name it as `MediaConvert_Default_Role` or change the name in
-`infra/custom.yaml` file.
+Is important than you set a prefix param in `infra/custom.yaml` to avoid errors
+like "The resource exists".
 
 #### Deploy stack
 

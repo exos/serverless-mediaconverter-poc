@@ -1,4 +1,4 @@
-service: media-converter 
+service: ${self:custom.prefix}-media-converter 
 variablesResolutionMode: 20210326
 
 package:
@@ -44,9 +44,10 @@ provider:
     S3_MEDIA_DIR: ${self:custom.mediaFolder}
 
     # MediaConverter service config
-    MEDIA_CONVERTER_QUEUE: ${self:custom.mediaQueue} 
-    MEDIA_CONVERTER_ARN:
+    MEDIA_CONVERTER_QUEUE:  
       Fn::GetAtt: [ VODQueue, Arn ]
+    MEDIA_CONVERTER_ROLE:
+      Fn::GetAtt: [ MediaConverterRole, Arn ]
 
     # DynamoDB config
     DB_TABLE: ${self:custom.tableName} 
@@ -61,17 +62,6 @@ provider:
 
 plugins:
   - serverless-prune-plugin   # Plugin for prune old functions versions
-
-## @TODO
-#layers:
-#  nodeModules:
-#    name: media-converter-node-modules-layer-${self:custom.stage}
-#    path: node_modules 
-#    description: Node modules directory for all functions
-#    package:
-#      patterns:
-###        - 'node_modules/**'
-#        - '!serverless*'
 
 # Functions definition
 functions:
@@ -90,7 +80,7 @@ functions:
 
   # Get video url for player
   GetVideoUri:
-    handler: src/apì.get
+    handler: src/api.get
     events:
       - http:
           path: videos/{uuid}

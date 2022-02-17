@@ -14,7 +14,7 @@ const debug = debugLib('handlers:s3');
 
 const {
     MEDIA_CONVERTER_QUEUE,
-    MEDIA_CONVERTER_ARN,
+    MEDIA_CONVERTER_ROLE,
     S3_MEDIA_DIR,
     S3_BUCKET,
     AWS_REGION,
@@ -72,7 +72,8 @@ const createMediaParams = (() => {
     return (input, output) => {
         const params = {
             ...data,
-            Queue: MEDIA_CONVERTER_ARN,
+            Queue: MEDIA_CONVERTER_QUEUE,
+            Role: MEDIA_CONVERTER_ROLE,
         };
 
         params.Settings.Inputs[0].FileInput = `${input}`;

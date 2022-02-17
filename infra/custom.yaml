@@ -2,16 +2,16 @@ stage: ${opt:stage, 'dev'}
 region: ${opt:region, 'us-east-1'}
 accountId: !Ref AWS::AccountId
 
-# Own
+## SET PROJECT PREFIX
+#prefix: mytest # <- Don't use it name
+
+## Names
 uploadFolder: uploads                                     # Folder for uplaods
 mediaFolder: media                                        # Folder for final videos files
-bucketName: media-converter-uploads-${self:custom.stage}  # S3 bucket name
-mediaQueue: media-converter-queue-${self:custom.stage}    # MediaConverter queue name
-tableName: MediaConverter-Videos-${self:custom.stage}     # DynamoDB table name
-
-# Define role arn for Video Converter service
-# @TODO Generate as resource
-videConverterRole: 'arn:aws:iam::{ Ref AWS::AccountId }:role/service-role/MediaConvert_Default_Role'
+bucketName: ${self:custom.prefix}-uploads-${self:custom.stage}  # S3 bucket name
+mediaQueue: ${self:custom.prefix}-queue-${self:custom.stage}    # MediaConverter queue name
+mediaRole: ${self:custom.prefix}-vod-role-${self:custom.stage}
+tableName: ${self:custom.prefix}-videos-${self:custom.stage}     # DynamoDB table name
 
 ## Prune plugin configuration
 prune:

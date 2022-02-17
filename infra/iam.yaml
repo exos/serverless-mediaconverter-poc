@@ -2,6 +2,7 @@
 
 role:
   statements:
+
     # Allow read of media folder to generate valid public urls
     - Sid: "AllowS3ReadObject"
       Effect: Allow
@@ -61,9 +62,11 @@ role:
         - mediaconvert:CreateJob
       Resource:
         - Fn::GetAtt: [ VODQueue, Arn ]
+
+    # Allow to pass Media Converter role
     - Sid: "MediaConverterPassRole"
       Effect: Allow
       Action:
         - iam:PassRole
       Resource:
-        - ${self:custom.videConverterRole} 
+        - Fn::GetAtt: [ MediaConverterRole, Arn ]

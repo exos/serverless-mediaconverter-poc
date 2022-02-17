@@ -1,6 +1,5 @@
 {
   "UserMetadata": {},
-  "Role": "arn:aws:iam::550963724061:role/service-role/MediaConvert_Default_Role",
   "Settings": {
     "TimecodeConfig": {
       "Source": "ZEROBASED"
