@@ -69,11 +69,14 @@ const createMediaParams = (() => {
         readFileSync(new URL('./media-job.json', import.meta.url), 'utf8')
     );
 
-    return (input, output) => {
+    return (uuid, input, output) => {
         const params = {
             ...data,
             Queue: MEDIA_CONVERTER_QUEUE,
             Role: MEDIA_CONVERTER_ROLE,
+            UserMetadata: {
+                uuid,
+            },
         };
 
         params.Settings.Inputs[0].FileInput = `${input}`;
@@ -94,14 +97,7 @@ const createMediaParams = (() => {
  */
 async function complete(details) {
     debug('Complete video transcoding', JSON.stringify(details));
-
-    const outputFile = details
-        .outputGroupDetails[0]
-        .outputDetails[0]
-        .outputFilePaths[0]
-    ;
-
-    const uuid = path.basename(outputFile).split('.')[0];
+    const {uuid} = details.userMetadata;
 
     debug(`Set video ${uuid} as complete`);
     await videos.setStatus(uuid, videos.STATUS_PROCESSED);
@@ -141,7 +137,7 @@ export async function upload(events, context) {
         );
 
         debug('Creating params');
-        const params = createMediaParams(input, output);
+        const params = createMediaParams(fileName, input, output);
 
         debug('Creating media converter job');
         const command = new CreateJobCommand(params);
